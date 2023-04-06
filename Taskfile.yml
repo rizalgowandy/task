@@ -62,6 +62,14 @@ tasks:
     cmds:
       - golangci-lint run
 
+  lint:fix:
+    desc: Runs golangci-lint and fixes any issues
+    sources:
+      - './**/*.go'
+      - .golangci.yml
+    cmds:
+      - golangci-lint run --fix
+
   sleepit:build:
     desc: Builds the sleepit test helper
     sources:
@@ -106,14 +114,6 @@ tasks:
     desc: Prepare the project for a new release
     cmds:
       - go run ./cmd/release {{.CLI_ARGS}}
-
-  npm:bump:
-    desc: Bump version in package.json. Requires `jq`.
-    vars:
-      VERSION: '{{coalesce .CLI_ARGS .VERSION}}'
-    cmds:
-      - cat package.json | jq '.version = "{{.VERSION}}"' > temp.json; mv temp.json package.json
-      - cat package-lock.json | jq '.version = "{{.VERSION}}" | .packages."".version = "{{.VERSION}}"' > temp.json; mv temp.json package-lock.json
 
   npm:publish:
     desc: Publish release to npm

@@ -4,8 +4,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
 
+	"github.com/go-task/task/v3/internal/orderedmap"
 	"github.com/go-task/task/v3/taskfile"
 )
 
@@ -24,8 +26,8 @@ vars:
 	)
 	tests := []struct {
 		content  string
-		v        interface{}
-		expected interface{}
+		v        any
+		expected any
 	}{
 		{
 			yamlCmd,
@@ -35,13 +37,17 @@ vars:
 		{
 			yamlTaskCall,
 			&taskfile.Cmd{},
-			&taskfile.Cmd{Task: "another-task", Vars: &taskfile.Vars{
-				Keys: []string{"PARAM1", "PARAM2"},
-				Mapping: map[string]taskfile.Var{
-					"PARAM1": taskfile.Var{Static: "VALUE1"},
-					"PARAM2": taskfile.Var{Static: "VALUE2"},
+			&taskfile.Cmd{
+				Task: "another-task", Vars: &taskfile.Vars{
+					OrderedMap: orderedmap.FromMapWithOrder(
+						map[string]taskfile.Var{
+							"PARAM1": {Static: "VALUE1"},
+							"PARAM2": {Static: "VALUE2"},
+						},
+						[]string{"PARAM1", "PARAM2"},
+					),
 				},
-			}},
+			},
 		},
 		{
 			yamlDeferredCmd,
@@ -51,12 +57,17 @@ vars:
 		{
 			yamlDeferredCall,
 			&taskfile.Cmd{},
-			&taskfile.Cmd{Task: "some_task", Vars: &taskfile.Vars{
-				Keys: []string{"PARAM1"},
-				Mapping: map[string]taskfile.Var{
-					"PARAM1": taskfile.Var{Static: "var"},
+			&taskfile.Cmd{
+				Task: "some_task", Vars: &taskfile.Vars{
+					OrderedMap: orderedmap.FromMapWithOrder(
+						map[string]taskfile.Var{
+							"PARAM1": {Static: "var"},
+						},
+						[]string{"PARAM1"},
+					),
 				},
-			}, Defer: true},
+				Defer: true,
+			},
 		},
 		{
 			yamlDep,
@@ -66,18 +77,22 @@ vars:
 		{
 			yamlTaskCall,
 			&taskfile.Dep{},
-			&taskfile.Dep{Task: "another-task", Vars: &taskfile.Vars{
-				Keys: []string{"PARAM1", "PARAM2"},
-				Mapping: map[string]taskfile.Var{
-					"PARAM1": taskfile.Var{Static: "VALUE1"},
-					"PARAM2": taskfile.Var{Static: "VALUE2"},
+			&taskfile.Dep{
+				Task: "another-task", Vars: &taskfile.Vars{
+					OrderedMap: orderedmap.FromMapWithOrder(
+						map[string]taskfile.Var{
+							"PARAM1": {Static: "VALUE1"},
+							"PARAM2": {Static: "VALUE2"},
+						},
+						[]string{"PARAM1", "PARAM2"},
+					),
 				},
-			}},
+			},
 		},
 	}
 	for _, test := range tests {
 		err := yaml.Unmarshal([]byte(test.content), test.v)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, test.expected, test.v)
 	}
 }

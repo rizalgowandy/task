@@ -8,27 +8,35 @@ import (
 	"github.com/fatih/color"
 )
 
-type Color func() PrintFunc
-type PrintFunc func(io.Writer, string, ...interface{})
+type (
+	Color     func() PrintFunc
+	PrintFunc func(io.Writer, string, ...any)
+)
 
 func Default() PrintFunc {
 	return color.New(envColor("TASK_COLOR_RESET", color.Reset)).FprintfFunc()
 }
+
 func Blue() PrintFunc {
 	return color.New(envColor("TASK_COLOR_BLUE", color.FgBlue)).FprintfFunc()
 }
+
 func Green() PrintFunc {
 	return color.New(envColor("TASK_COLOR_GREEN", color.FgGreen)).FprintfFunc()
 }
+
 func Cyan() PrintFunc {
 	return color.New(envColor("TASK_COLOR_CYAN", color.FgCyan)).FprintfFunc()
 }
+
 func Yellow() PrintFunc {
 	return color.New(envColor("TASK_COLOR_YELLOW", color.FgYellow)).FprintfFunc()
 }
+
 func Magenta() PrintFunc {
 	return color.New(envColor("TASK_COLOR_MAGENTA", color.FgMagenta)).FprintfFunc()
 }
+
 func Red() PrintFunc {
 	return color.New(envColor("TASK_COLOR_RED", color.FgRed)).FprintfFunc()
 }
@@ -41,7 +49,6 @@ func envColor(env string, defaultColor color.Attribute) color.Attribute {
 	override, err := strconv.Atoi(os.Getenv(env))
 	if err == nil {
 		return color.Attribute(override)
-
 	}
 	return defaultColor
 }
@@ -56,14 +63,14 @@ type Logger struct {
 }
 
 // Outf prints stuff to STDOUT.
-func (l *Logger) Outf(color Color, s string, args ...interface{}) {
+func (l *Logger) Outf(color Color, s string, args ...any) {
 	l.FOutf(l.Stdout, color, s+"\n", args...)
 }
 
 // FOutf prints stuff to the given writer.
-func (l *Logger) FOutf(w io.Writer, color Color, s string, args ...interface{}) {
+func (l *Logger) FOutf(w io.Writer, color Color, s string, args ...any) {
 	if len(args) == 0 {
-		s, args = "%s", []interface{}{s}
+		s, args = "%s", []any{s}
 	}
 	if !l.Color {
 		color = Default
@@ -73,16 +80,16 @@ func (l *Logger) FOutf(w io.Writer, color Color, s string, args ...interface{}) 
 }
 
 // VerboseOutf prints stuff to STDOUT if verbose mode is enabled.
-func (l *Logger) VerboseOutf(color Color, s string, args ...interface{}) {
+func (l *Logger) VerboseOutf(color Color, s string, args ...any) {
 	if l.Verbose {
 		l.Outf(color, s, args...)
 	}
 }
 
 // Errf prints stuff to STDERR.
-func (l *Logger) Errf(color Color, s string, args ...interface{}) {
+func (l *Logger) Errf(color Color, s string, args ...any) {
 	if len(args) == 0 {
-		s, args = "%s", []interface{}{s}
+		s, args = "%s", []any{s}
 	}
 	if !l.Color {
 		color = Default
@@ -92,7 +99,7 @@ func (l *Logger) Errf(color Color, s string, args ...interface{}) {
 }
 
 // VerboseErrf prints stuff to STDERR if verbose mode is enabled.
-func (l *Logger) VerboseErrf(color Color, s string, args ...interface{}) {
+func (l *Logger) VerboseErrf(color Color, s string, args ...any) {
 	if l.Verbose {
 		l.Errf(color, s, args...)
 	}
